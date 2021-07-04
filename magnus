@@ -16,8 +16,18 @@ __VERSION__ = "1.0.3"
 
 
 class Main(object):
+
+    WIN_SIZE_OPTIONS = [
+        (640, 480),
+        (1280, 720),
+        (1600, 900),
+        (1920, 1080),
+        (2560, 1440),
+        (3840, 2160),
+    ]
+
     def __init__(self):
-        self.zoomlevel = 2
+        self.zoomlevel = 1
         self.app = Gtk.Application.new(
             "org.kryogenix.magnus",
             Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
@@ -28,10 +38,12 @@ class Main(object):
         self.window_metrics_restored = False
         self.decorations_height = 0
         self.decorations_width = 0
-        self.min_width = 300
-        self.min_height = 300
-        self.refresh_interval = 250
+        self.min_width = 1280
+        self.min_height = 720
+        self.refresh_interval = 16
         self.started_by_keypress = False
+        self.prev_pointer = None
+        self.frozen = False
 
     def handle_shutdown(self, app):
         if self.started_by_keypress:
@@ -99,11 +111,18 @@ class Main(object):
         # the window
         self.w = Gtk.ApplicationWindow.new(self.app)
         self.w.set_size_request(self.min_width, self.min_height)
+        self.w.set_default_size(self.min_width, self.min_height)
+        self.w.set_resizable(False)
         self.w.set_title("Magnus")
         self.w.connect("destroy", lambda a: self.app.quit())
         self.w.connect("configure-event", self.read_window_size)
         self.w.connect("configure-event", self.window_configure)
         self.w.connect("size-allocate", self.read_window_decorations_size)
+        self.w.set_keep_above(True)
+        self.w.set_keep_below(False)
+        self.w.set_type_hint(Gdk.WindowTypeHint.DOCK)
+        self.w.set_type_hint(Gdk.WindowTypeHint.NORMAL)
+        self.w.stick()
         devman = self.w.get_screen().get_display().get_device_manager()
         self.pointer = devman.get_client_pointer()
 
@@ -113,11 +132,21 @@ class Main(object):
         head.props.title = "Magnus"
         self.w.set_titlebar(head)
 
+        # the window size chooser
+        resolution = Gtk.ComboBoxText.new()
+        self.resolution = resolution
+        for res in self.WIN_SIZE_OPTIONS:
+            res_opt = "{}×{}".format(res[0], res[1])
+            resolution.append(res_opt, res_opt)
+        resolution.set_active(0)
+        resolution.connect("changed", self.set_resolution)
+        head.pack_end(resolution)
+
         # the zoom chooser
         zoom = Gtk.ComboBoxText.new()
         self.zoom = zoom
-        for i in range(2, 6):
-            zoom.append(str(i), "{}×".format(i))
+        for i in range(10, 40, 2):
+            zoom.append(str(i/10.0), "{}×".format(i/10.0))
         zoom.set_active(0)
         zoom.connect("changed", self.set_zoom)
         head.pack_end(zoom)
@@ -134,6 +163,7 @@ class Main(object):
             Keybinder.bind("<Alt><Super>plus", self.zoom_in, zoom)
             Keybinder.bind("<Alt><Super>equal", self.zoom_in, zoom)
             Keybinder.bind("<Alt><Super>minus", self.zoom_out, zoom)
+            Keybinder.bind("<Ctrl><Alt>F", self.toggle_freeze)
 
         # and, go
         self.w.show_all()
@@ -148,6 +178,9 @@ class Main(object):
         GLib.timeout_add(self.refresh_interval, self.poll)
 
         GLib.idle_add(self.load_config)
+
+    def toggle_freeze(self, keypress):
+        self.frozen = not self.frozen
 
     def zoom_out(self, keypress, zoom):
         current_index = zoom.get_active()
@@ -170,9 +203,16 @@ class Main(object):
         self.decorations_height = alloc.height - sz.height
 
     def set_zoom(self, zoom):
-        self.zoomlevel = int(zoom.get_active_text()[0])
+        self.zoomlevel = float(zoom.get_active_text()[:-1])
         self.poll()
         self.serialise()
+
+    def set_resolution(self, res):
+        (res_x, res_y) = res.get_active_text().split("×")
+        print("res: ", res_x, res_y)
+        self.w.set_resizable(True)
+        self.w.set_size_request(int(res_x), int(res_y))
+        self.w.set_resizable(False)
 
     def read_window_size(self, *args):
         loc = self.w.get_size()
@@ -230,7 +270,11 @@ class Main(object):
 
     def poll(self):
         display = Gdk.Display.get_default()
-        (screen, x, y, modifier) = display.get_pointer()
+        if self.frozen:
+            (screen, x, y, modifier) = self.prev_pointer
+        else:
+            (screen, x, y, modifier) = display.get_pointer()
+            self.prev_pointer = (screen, x, y, modifier)
         if (x > self.window_x and
                 x <= (self.window_x + self.width + self.decorations_width) and
                 y > self.window_y and
@@ -247,6 +291,16 @@ class Main(object):
             screenshot = Gdk.pixbuf_get_from_window(
                 root, x - scaled_xoff,
                 y - scaled_yoff, scaled_width, scaled_height)
+
+            # draw pointer on window
+            (screen, p_x, p_y, modifier) = display.get_pointer()
+            pointer = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, False, 8, 10, 10)
+            scaled_pointer_x = p_x - (x - scaled_xoff)
+            scaled_pointer_y = p_y - (y - scaled_yoff)
+            print(scaled_pointer_x, scaled_pointer_y)
+            pointer.fill(0x81A397)
+            pointer.copy_area(0, 0, 10, 10, screenshot, scaled_pointer_x, scaled_pointer_y)
+
             scaled_pb = screenshot.scale_simple(
                 self.width, self.height,
                 GdkPixbuf.InterpType.NEAREST)
