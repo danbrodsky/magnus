@@ -11,6 +11,7 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Keybinder', '3.0')
 from gi.repository import \
     Gtk, Gdk, GLib, GdkPixbuf, Gio, Keybinder  # noqa: E402
+from IPython import embed
 
 __VERSION__ = "1.0.3"
 
@@ -125,6 +126,13 @@ class Main(object):
         self.w.stick()
         devman = self.w.get_screen().get_display().get_device_manager()
         self.pointer = devman.get_client_pointer()
+
+        # self.pointer_image = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+        #     "cursor.png", 32, 32, False)
+        # self.pointer_image = self.pointer_image.add_alpha(True, 255, 255, 255)
+
+        self.pointer_image = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, False, 8, 16, 20)
+        self.pointer_image.fill(0x81A397)
 
         # the headerbar
         head = Gtk.HeaderBar()
@@ -294,12 +302,12 @@ class Main(object):
 
             # draw pointer on window
             (screen, p_x, p_y, modifier) = display.get_pointer()
-            pointer = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, False, 8, 10, 10)
             scaled_pointer_x = p_x - (x - scaled_xoff)
             scaled_pointer_y = p_y - (y - scaled_yoff)
-            print(scaled_pointer_x, scaled_pointer_y)
-            pointer.fill(0x81A397)
-            pointer.copy_area(0, 0, 10, 10, screenshot, scaled_pointer_x, scaled_pointer_y)
+            self.pointer_image.copy_area(0, 0, 6, 6,
+                              screenshot,
+                              scaled_pointer_x,
+                              scaled_pointer_y)
 
             scaled_pb = screenshot.scale_simple(
                 self.width, self.height,
