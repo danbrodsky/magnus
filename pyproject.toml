@@ -1,0 +1,58 @@
+[project]
+name = "mirrus"
+version = "1.0.0"
+description = "Display subsection mirror for screen-sharing on large displays"
+authors = ["Daniel Brodsky <danbrodsky@pm.me>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/danbrodsky/mirrus"
+url = "https://github.com/danbrodsky/mirrus"
+documentation = "https://github.com/danbrodsky/mirrus"
+keywords = [
+    "Screen Sharing",
+    "Presentation",
+]
+
+[dependencies]
+python = "^3.6"
+PyGObject = "*"
+setproctitle = "*"
+
+[dev-dependencies]
+black = "*"
+mypy-extensions = "*"
+
+[tool.black]
+line_length = 88
+target_version = ['py36']
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+  | foo.py           # also separately exclude a file named foo.py in
+                     # the root of the project
+)
+'''
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+combine_as_imports = true
+line_length = 80
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
