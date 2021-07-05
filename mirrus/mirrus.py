@@ -7,12 +7,10 @@ import setproctitle
 import sys
 from functools import lru_cache
 import gi
-gi.require_version('Gtk', '3.0')
-gi.require_version('Keybinder', '3.0')
-from gi.repository import \
-    Gtk, Gdk, GLib, GdkPixbuf, Gio, Keybinder  # noqa: E402
 
-__VERSION__ = "1.0.0"
+gi.require_version("Gtk", "3.0")
+gi.require_version("Keybinder", "3.0")
+from gi.repository import Gtk, Gdk, GLib, GdkPixbuf, Gio, Keybinder  # noqa: E402
 
 
 class Main(object):
@@ -29,8 +27,8 @@ class Main(object):
     def __init__(self):
         self.zoomlevel = 1
         self.app = Gtk.Application.new(
-            "org.mirrus",
-            Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+            "org.mirrus", Gio.ApplicationFlags.HANDLES_COMMAND_LINE
+        )
         self.app.connect("command-line", self.handle_commandline)
         self.resize_timeout = None
         self.window_metrics = None
@@ -42,7 +40,7 @@ class Main(object):
         self.refresh_interval = 16
         self.prev_pointer = None
         self.frozen = False
-        self.cursor_color = 0x81A397 # fancy blue :3
+        self.cursor_color = 0x81A397  # fancy blue :3
 
     def handle_commandline(self, app, cmdline):
         args = cmdline.get_arguments()
@@ -95,7 +93,9 @@ class Main(object):
         # "cursor.png", 32, 32, False) self.pointer_image =
         # self.pointer_image.add_alpha(True, 255, 255, 255)
 
-        self.pointer_image = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, False, 8, 16, 20)
+        self.pointer_image = GdkPixbuf.Pixbuf.new(
+            GdkPixbuf.Colorspace.RGB, False, 8, 16, 20
+        )
         self.pointer_image.fill(self.cursor_color)
 
         # the headerbar
@@ -118,7 +118,7 @@ class Main(object):
         zoom = Gtk.ComboBoxText.new()
         self.zoom = zoom
         for i in range(10, 40, 2):
-            zoom.append(str(i/10.0), "{}×".format(i/10.0))
+            zoom.append(str(i / 10.0), "{}×".format(i / 10.0))
         zoom.set_active(0)
         zoom.connect("changed", self.set_zoom)
         head.pack_end(zoom)
@@ -192,8 +192,9 @@ class Main(object):
         self.height = loc.height
 
     @lru_cache()
-    def makesquares(self, overall_width, overall_height, square_size,
-                    value_on, value_off):
+    def makesquares(
+        self, overall_width, overall_height, square_size, value_on, value_off
+    ):
         on_sq = list(value_on) * square_size
         off_sq = list(value_off) * square_size
         on_row = []
@@ -203,8 +204,8 @@ class Main(object):
             on_row += off_sq
             off_row += off_sq
             off_row += on_sq
-        on_row = on_row[:overall_width * len(value_on)]
-        off_row = off_row[:overall_width * len(value_on)]
+        on_row = on_row[: overall_width * len(value_on)]
+        off_row = off_row[: overall_width * len(value_on)]
 
         on_sq_row = on_row * square_size
         off_sq_row = off_row * square_size
@@ -215,7 +216,7 @@ class Main(object):
             overall += on_sq_row
             overall += off_sq_row
             count += 2
-        overall = overall[:overall_width * overall_height * len(value_on)]
+        overall = overall[: overall_width * overall_height * len(value_on)]
         return overall
 
     @lru_cache()
@@ -226,8 +227,8 @@ class Main(object):
         whole = self.makesquares(width, height, square_size, light, dark)
         arr = GLib.Bytes.new(whole)
         return GdkPixbuf.Pixbuf.new_from_bytes(
-            arr, GdkPixbuf.Colorspace.RGB, True, 8,
-            width, height, width * len(light))
+            arr, GdkPixbuf.Colorspace.RGB, True, 8, width, height, width * len(light)
+        )
 
     def poll(self):
         display = Gdk.Display.get_default()
@@ -236,10 +237,12 @@ class Main(object):
         else:
             (screen, x, y, modifier) = display.get_pointer()
             self.prev_pointer = (screen, x, y, modifier)
-        if (x > self.window_x and
-                x <= (self.window_x + self.width + self.decorations_width) and
-                y > self.window_y and
-                y <= (self.window_y + self.height + self.decorations_height)):
+        if (
+            x > self.window_x
+            and x <= (self.window_x + self.width + self.decorations_width)
+            and y > self.window_y
+            and y <= (self.window_y + self.height + self.decorations_height)
+        ):
             # pointer is over our window, so make it an empty pixbuf
             white = self.get_white_pixbuf(self.width, self.height)
             self.img.set_from_pixbuf(white)
@@ -250,21 +253,20 @@ class Main(object):
             scaled_xoff = scaled_width // 2
             scaled_yoff = scaled_height // 2
             screenshot = Gdk.pixbuf_get_from_window(
-                root, x - scaled_xoff,
-                y - scaled_yoff, scaled_width, scaled_height)
+                root, x - scaled_xoff, y - scaled_yoff, scaled_width, scaled_height
+            )
 
             # draw pointer on window
             (screen, p_x, p_y, modifier) = display.get_pointer()
             scaled_pointer_x = p_x - (x - scaled_xoff)
             scaled_pointer_y = p_y - (y - scaled_yoff)
-            self.pointer_image.copy_area(0, 0, 6, 6,
-                              screenshot,
-                              scaled_pointer_x,
-                              scaled_pointer_y)
+            self.pointer_image.copy_area(
+                0, 0, 6, 6, screenshot, scaled_pointer_x, scaled_pointer_y
+            )
 
             scaled_pb = screenshot.scale_simple(
-                self.width, self.height,
-                GdkPixbuf.InterpType.NEAREST)
+                self.width, self.height, GdkPixbuf.InterpType.NEAREST
+            )
             self.img.set_from_pixbuf(scaled_pb)
         return True
 
@@ -274,8 +276,10 @@ class Main(object):
         if self.resize_timeout:
             GLib.source_remove(self.resize_timeout)
         self.resize_timeout = GLib.timeout_add_seconds(
-            1, self.save_window_metrics_after_timeout,
-            {"x": ev.x, "y": ev.y, "w": ev.width, "h": ev.height})
+            1,
+            self.save_window_metrics_after_timeout,
+            {"x": ev.x, "y": ev.y, "w": ev.width, "h": ev.height},
+        )
         self.window_x = ev.x
         self.window_y = ev.y
 
@@ -294,7 +298,7 @@ class Main(object):
             "ww": props["w"] / sw,
             "wh": props["h"] / sh,
             "wx": props["x"] / sw,
-            "wy": props["y"] / sh
+            "wy": props["y"] / sh,
         }
         self.serialise()
 
@@ -303,8 +307,7 @@ class Main(object):
         sw = float(scr.get_width())
         sh = float(scr.get_height())
         self.w.set_size_request(self.min_width, self.min_height)
-        self.w.resize(
-            int(sw * metrics["ww"]), int(sh * metrics["wh"]))
+        self.w.resize(int(sw * metrics["ww"]), int(sh * metrics["wh"]))
         self.w.move(int(sw * metrics["wx"]), int(sh * metrics["wy"]))
 
     def get_cache_file(self):
@@ -331,15 +334,22 @@ class Main(object):
         try:
             success, contents, _ = f.load_contents_finish(res)
         except GLib.Error as e:
-            print(("couldn't restore settings (error: %s)"
-                   ", so assuming they're blank") % (e,))
+            print(
+                ("couldn't restore settings (error: %s)" ", so assuming they're blank")
+                % (e,)
+            )
             contents = "{}"
 
         try:
             data = json.loads(contents)
         except Exception as e:
-            print(("Warning: settings file seemed to be invalid json"
-                   " (error: %s), so assuming blank") % (e,))
+            print(
+                (
+                    "Warning: settings file seemed to be invalid json"
+                    " (error: %s), so assuming blank"
+                )
+                % (e,)
+            )
             data = {}
         zl = data.get("zoom")
         if zl:
@@ -357,7 +367,7 @@ class Main(object):
 
 
 def main():
-    setproctitle.setproctitle('mirrus')
+    setproctitle.setproctitle("mirrus")
     m = Main()
     m.app.run(sys.argv)
 
