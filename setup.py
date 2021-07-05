@@ -18,7 +18,7 @@ import DistUtilsExtra.command.clean_i18n
 
 # silence pyflakes, __VERSION__ is properly assigned below...
 __VERSION__ = '0.0.0.0'
-with open('magnus') as f:
+with open('mirrus') as f:
     for line in f:
         if (line.startswith('__VERSION__')):
             exec(line.strip())
@@ -37,8 +37,8 @@ def datafilelist(installbase, sourcebase):
 
 data_files = [
     ('{prefix}/share/man/man1'.format(prefix=sys.prefix), glob('data/*.1')),
-    ('{prefix}/share/applications'.format(prefix=sys.prefix), ['data/magnus.desktop',]),
-    ('/etc/xdg/autostart'.format(prefix=sys.prefix), ['data/magnus-autostart.desktop',]),
+    ('{prefix}/share/applications'.format(prefix=sys.prefix), ['data/mirrus.desktop',]),
+    ('/etc/xdg/autostart'.format(prefix=sys.prefix), ['data/mirrus-autostart.desktop',]),
 ]
 #data_files.extend(datafilelist('{prefix}/share/locale'.format(prefix=sys.prefix), 'build/mo'))
 
@@ -49,15 +49,15 @@ cmdclass ={
 }
 
 setup(
-    name = "Magnus",
+    name = "Mirrus",
     version = PROGRAM_VERSION,
-    description = "A very simple screen magnifier for Ubuntu",
+    description = "Screen-sharing for large displays",
     license = 'MIT',
-    author = 'Stuart Langridge',
-    url = 'https://github.com/stuartlangridge/magnus',
+    author = 'Daniel Brodsky',
+    url = 'https://github.com/danbrodsky/mirrus',
     package_dir = {'': '.'},
     data_files = data_files,
     install_requires = [ 'setuptools', ],
-    scripts = ['magnus'],
+    scripts = ['mirrus'],
     cmdclass = cmdclass,
 )

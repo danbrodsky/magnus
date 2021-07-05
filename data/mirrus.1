@@ -1,0 +1,16 @@
+.TH mirrus 1 "" ""
+.SH NAME
+mirrus \- A display subsection mirror for screen-sharing large displays
+.SH SYNOPSIS
+.B mirrus [--refresh-interval=MILLISECONDS]
+.SH DESCRIPTION
+A screen mirror that captures only a part of the screen, allowing users with high resolution displays to share their screen without scaling their resolution down.
+.SH OPTIONS
+.TP
+.BR \-\-refresh-interval =\fIMILLISECONDS\fR
+How often to update Mirrus' window. Defaults to 16ms (~60FPS).
+
+.SH KEYBINDS
+.TP
+.BR CTRL+ALT+F
+Freeze the display position. Allows the user to show a fixed region of their screen.

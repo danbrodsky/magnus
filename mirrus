@@ -11,9 +11,8 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Keybinder', '3.0')
 from gi.repository import \
     Gtk, Gdk, GLib, GdkPixbuf, Gio, Keybinder  # noqa: E402
-from IPython import embed
 
-__VERSION__ = "1.0.3"
+__VERSION__ = "1.0.0"
 
 
 class Main(object):
@@ -30,10 +29,9 @@ class Main(object):
     def __init__(self):
         self.zoomlevel = 1
         self.app = Gtk.Application.new(
-            "org.kryogenix.magnus",
+            "org.mirrus",
             Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
         self.app.connect("command-line", self.handle_commandline)
-        self.app.connect("shutdown", self.handle_shutdown)
         self.resize_timeout = None
         self.window_metrics = None
         self.window_metrics_restored = False
@@ -42,29 +40,15 @@ class Main(object):
         self.min_width = 1280
         self.min_height = 720
         self.refresh_interval = 16
-        self.started_by_keypress = False
         self.prev_pointer = None
         self.frozen = False
-
-    def handle_shutdown(self, app):
-        if self.started_by_keypress:
-            settings = Gio.Settings.new("org.gnome.desktop.a11y.applications")
-            val = settings.get_boolean("screen-magnifier-enabled")
-            if val:
-                settings.set_boolean("screen-magnifier-enabled", False)
+        self.cursor_color = 0x81A397 # fancy blue :3
 
     def handle_commandline(self, app, cmdline):
         args = cmdline.get_arguments()
-        if hasattr(self, "w"):
-            # already started
-            if "--about" in args:
-                self.show_about_dialog()
-            return 0
 
         if "--help" in args:
             print("Options:")
-            print("  --about")
-            print("    Show about dialogue")
             print("  --refresh-interval=120")
             print("    Set refresh interval in milliseconds (lower is faster)")
 
@@ -79,42 +63,20 @@ class Main(object):
                         self.refresh_interval = rival
                     except ValueError:
                         pass
-            if arg == "--started-by-keypress":
-                self.started_by_keypress = True
-                # This is here so that the autostart desktop file can
-                # specify it.
-                # The idea is that Gnome-ish desktops have an explicit
-                # keybinding to run the system magnifier; what this keybinding
-                # actually does, via the {desktop}-settings-daemon, is toggle
-                # the gsettings key
-                # org.gnome.desktop.a11y.applications screen-magnifier-enabled
-                # Magnus provides a desktop file to go in /etc/xdg/autostart
-                # which contains an AutostartCondition of
-                # GSettings org.gnome.desktop.a11y.applications /
-                #       screen-magnifier-enabled
-                # and then the {desktop}-session daemon takes care of
-                # starting the app when that key goes true, and closing the
-                # app if that key goes false. However, the user may also
-                # explicitly quit Magnus with the close icon or alt-f4
-                # or similar. If they do so, then we explicitly set the key
-                # back to false, so that the global keybinding to run the
-                # magnifier stays in sync.
 
         # First time startup
         self.start_everything_first_time()
-        if "--about" in args:
-            self.show_about_dialog()
         return 0
 
     def start_everything_first_time(self, on_window_map=None):
-        GLib.set_application_name("Magnus")
+        GLib.set_application_name("Mirrus")
 
         # the window
         self.w = Gtk.ApplicationWindow.new(self.app)
         self.w.set_size_request(self.min_width, self.min_height)
         self.w.set_default_size(self.min_width, self.min_height)
         self.w.set_resizable(False)
-        self.w.set_title("Magnus")
+        self.w.set_title("Mirrus")
         self.w.connect("destroy", lambda a: self.app.quit())
         self.w.connect("configure-event", self.read_window_size)
         self.w.connect("configure-event", self.window_configure)
@@ -127,17 +89,19 @@ class Main(object):
         devman = self.w.get_screen().get_display().get_device_manager()
         self.pointer = devman.get_client_pointer()
 
+        # XXX: could not add support for images as cursor because GTK would not
+        # enable transparency, so cursor could only be rectangular
         # self.pointer_image = GdkPixbuf.Pixbuf.new_from_file_at_scale(
-        #     "cursor.png", 32, 32, False)
-        # self.pointer_image = self.pointer_image.add_alpha(True, 255, 255, 255)
+        # "cursor.png", 32, 32, False) self.pointer_image =
+        # self.pointer_image.add_alpha(True, 255, 255, 255)
 
         self.pointer_image = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, False, 8, 16, 20)
-        self.pointer_image.fill(0x81A397)
+        self.pointer_image.fill(self.cursor_color)
 
         # the headerbar
         head = Gtk.HeaderBar()
         head.set_show_close_button(True)
-        head.props.title = "Magnus"
+        head.props.title = "Mirrus"
         self.w.set_titlebar(head)
 
         # the window size chooser
@@ -226,17 +190,6 @@ class Main(object):
         loc = self.w.get_size()
         self.width = loc.width
         self.height = loc.height
-
-    def show_about_dialog(self, *args):
-        about_dialog = Gtk.AboutDialog()
-        about_dialog.set_artists(["Stuart Langridge"])
-        about_dialog.set_authors(["Stuart Langridge"])
-        about_dialog.set_version(__VERSION__)
-        about_dialog.set_license_type(Gtk.License.MIT_X11)
-        about_dialog.set_website("https://www.kryogenix.org/code/magnus")
-        about_dialog.run()
-        if about_dialog:
-            about_dialog.destroy()
 
     @lru_cache()
     def makesquares(self, overall_width, overall_height, square_size,
@@ -355,7 +308,7 @@ class Main(object):
         self.w.move(int(sw * metrics["wx"]), int(sh * metrics["wy"]))
 
     def get_cache_file(self):
-        return os.path.join(GLib.get_user_cache_dir(), "magnus.json")
+        return os.path.join(GLib.get_user_cache_dir(), "mirrus.json")
 
     def serialise(self, *args, **kwargs):
         # yeah, yeah, supposed to use Gio's async file stuff here. But it was
@@ -404,7 +357,7 @@ class Main(object):
 
 
 def main():
-    setproctitle.setproctitle('magnus')
+    setproctitle.setproctitle('mirrus')
     m = Main()
     m.app.run(sys.argv)
 

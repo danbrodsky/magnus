@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Mirrus
+GenericName=Mirrus display subsection mirror
+Comment=Screen-sharing for large displays
+Exec=mirrus
+Terminal=false
+Type=Application
+Categories=Utility;Accessibility;
+Keywords=accessibility;utility;
+Icon=view-fullscreen
