@@ -78,6 +78,8 @@ class Main(object):
         self.w.connect("destroy", lambda a: self.app.quit())
         self.w.connect("configure-event", self.read_window_size)
         self.w.connect("configure-event", self.window_configure)
+        self.window_x = self.w.get_position()[0]
+        self.window_y = self.w.get_position()[1]
         self.w.connect("size-allocate", self.read_window_decorations_size)
         self.w.set_keep_above(True)
         self.w.set_keep_below(False)
@@ -181,7 +183,6 @@ class Main(object):
 
     def set_resolution(self, res):
         (res_x, res_y) = res.get_active_text().split("×")
-        print("res: ", res_x, res_y)
         self.w.set_resizable(True)
         self.w.set_size_request(int(res_x), int(res_y))
         self.w.set_resizable(False)
