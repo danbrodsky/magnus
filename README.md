@@ -1,28 +1,16 @@
-<h1 align="center">
-  <img src="data/logo.png" alt="Magnus">
-  <br />
-  Magnus
-</h1>
+## Mirrus
 
-<p align="center"><b>A very simple screen magnifier.</b></p>
+![example](data/example.gif)
 
-![Magnus Screenshot](data/screenshot.png?raw=true)
+### What is this?
 
-<p align="center">Made with 💝 for <img src="https://raw.githubusercontent.com/anythingcodes/slack-emoji-for-techies/gh-pages/emoji/tux.png" align="top" width="24" /></p>
+Ever wanted to share your Linux machine's screen to people but your 4K monitor being degraded to 720p made the quality too low for viewing? Well this tool allows you to show only a subsection of your screen inside a new window so you don't need to scale down your screen resolution.
 
-## Building, Testing, and Installation
+### Usage
 
-### Ubuntu
+The ideal way to use this tool is to open it, set the screen resolution you want to share, and share the application window in Discord, Zoom, etc. Then hide the window off at the side and present whatever you want. By default the mirror will always follow your cursor, but you can also press Ctrl+Alt+F to freeze the mirror in place. You can also switch workspaces freely without worrying about losing the screen share as the mirror will always remain on your desktop.
 
-A [PPA for Magnus](https://launchpad.net/~flexiondotorg/+archive/ubuntu/magnus) is published by [Martin Wimpress](https://github.com/flexiondotorg).
-
-```bash
-sudo add-apt-repository ppa:flexiondotorg/magnus
-sudo apt update
-sudo apt install magnus
-```
-
-### Source
+### Installation
 
 You'll need the following dependencies:
 
@@ -34,8 +22,16 @@ You'll need the following dependencies:
   * `python3-gi`
   * `python3-setproctitle`
 
-Run `setup.py` to build and install Magnus:
+Run `setup.py` to build and install:
 
 ```bash
 sudo python3 setup.py install
 ```
+
+or `pip` to install as a package only:
+```bash
+sudo pip install .
+```
+
+### Acknowledgements
+All credit goes to original creator of ![Magnus](https://github.com/stuartlangridge/magnus), I just made some slight modifications for my use-case. :3
