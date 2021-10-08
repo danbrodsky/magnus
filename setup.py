@@ -3,10 +3,10 @@
 
 import os
 import sys
+import shutil
 
 from glob import glob
 from setuptools import setup
-
 
 def datafilelist(installbase, sourcebase):
     datafileList = []
@@ -51,5 +51,5 @@ setup(
         "setuptools",
     ],
     python_requires=">=3.6.*",
-    scripts=["mirrus/__init__.py"],
+    scripts=["mirrus/mirrus"],
 )
